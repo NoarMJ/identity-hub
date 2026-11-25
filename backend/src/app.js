@@ -1,10 +1,15 @@
 import express from "express";
 import { prisma } from "./config/prisma.js";
 import { redis } from "./config/redis.js";
+import { errorHandler } from "./middleware/errorHandler.js";
+import authRoutes from "./routes/auth.routes.js"
 
 const app = express();
 
 app.use(express.json());
+
+
+app.use("/api/auth", authRoutes);
 
 
 async function checkDatabase() {
@@ -42,5 +47,7 @@ app.get("/health", async (req, res) => {
   redis: redisStatus,
  });
 });
+
+app.use(errorHandler);
 
 export default app;
