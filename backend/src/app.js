@@ -1,13 +1,18 @@
 import express from "express";
+import { prisma } from "./config/prisma.js";
 
 const app = express();
 
-// Middleware: parse JSON request bodies into req.body
 app.use(express.json());
 
-// Health endpoint: lets us (and later, monitoring tools) check the server is alive
-app.get("/health", (req, res) => {
-  res.status(200).json({ status: "ok" });
+app.get("/health", async (req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    res.status(200).json({ status: "ok", database: "up" });
+  } catch (error) {
+    console.error("Health check: database unreachable:", error.message);
+    res.status(503).json({ status: "degraded", database: "down" });
+  }
 });
 
 export default app;
