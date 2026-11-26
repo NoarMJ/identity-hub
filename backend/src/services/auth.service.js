@@ -3,6 +3,7 @@ import { hashPassword, verifyPassword } from "./password.service.js";
 import { createSession, destroySession } from "./session.service.js";
 import { createUser, findUserByEmail } from "../repositories/user.repository.js";
 import { HttpError } from "../utils/httpError.js";
+import { sendVerificationInBackground } from "./verification.service.js";
 
 // Created once at startup. Verified against when the account doesn't exist,
 // so "unknown email" costs the same time as "wrong password".
@@ -11,8 +12,9 @@ const dummyHash = await hashPassword(randomBytes(16).toString("hex"));
 export async function registerUser({ name, email, password }) {
   const passwordHash = await hashPassword(password);
 
+  let user;
   try {
-    return await createUser({ name, email, passwordHash });
+    user = await createUser({ name, email, passwordHash });
   } catch (error) {
     // P2002 = Prisma's code for "unique constraint violated" (duplicate email)
     if (error.code === "P2002") {
@@ -20,6 +22,9 @@ export async function registerUser({ name, email, password }) {
     }
     throw error;
   }
+
+  sendVerificationInBackground(user);
+  return user;
 }
 
 export async function loginUser({

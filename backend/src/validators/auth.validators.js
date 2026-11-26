@@ -12,3 +12,11 @@ export const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email("Invalid email").max(254),
   password: z.string().min(1, "Password is required").max(128),
 });
+
+export const verifyEmailSchema = z.object({
+  token: z.string().min(1, "Token is required").max(200),
+});
+
+export const resendVerificationSchema = z.object({
+  email: z.string().trim().toLowerCase().email("Invalid email").max(254),
+});

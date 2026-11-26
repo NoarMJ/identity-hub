@@ -1,4 +1,4 @@
-import { registerSchema, loginSchema } from "../validators/auth.validators.js";
+import { registerSchema, loginSchema,verifyEmailSchema,resendVerificationSchema } from "../validators/auth.validators.js";
 import { registerUser, loginUser } from "../services/auth.service.js";
 import { destroySession } from "../services/session.service.js";
 import { findUserById } from "../repositories/user.repository.js";
@@ -7,6 +7,7 @@ import {
   sessionCookieOptions,
   sessionCookieClearOptions,
 } from "../config/session.js";
+import { verifyEmail, resendVerification } from "../services/verification.service.js";
 
 function validationError(res, error) {
   return res.status(400).json({
@@ -74,6 +75,32 @@ export async function me(req, res, next) {
 
     const { status, ...publicUser } = user;
     return res.status(200).json({ user: publicUser });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function verifyEmailHandler(req,res,next) {
+    try{
+        const result = verifyEmailSchema.safeParse(req.body);
+        if (!result.success) return validationError(res, result.error);
+
+        await verifyEmail(result.data.token);
+    return res.status(200).json({ message: "Email verified" });
+  } catch (error) {
+    return next(error);
+    }
+}
+
+export async function resendVerificationHandler(req, res, next) {
+  try {
+    const result = resendVerificationSchema.safeParse(req.body);
+    if (!result.success) return validationError(res, result.error);
+
+    await resendVerification(result.data.email);
+    return res.status(202).json({
+      message: "If the account exists and is not verified, an email has been sent.",
+    });
   } catch (error) {
     return next(error);
   }
