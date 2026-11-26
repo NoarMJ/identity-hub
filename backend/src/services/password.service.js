@@ -12,7 +12,7 @@ export function hashPassword(plainpassword) {
     return argon2.hash(plainpassword, options) ;
 }
 
-export async function verifyPayment(hash, plainPassword) {
+export async function verifyPassword(hash, plainPassword) {
     try{
         return await argon2.verify(hash, plainPassword);
     } catch {

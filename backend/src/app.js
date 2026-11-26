@@ -3,10 +3,12 @@ import { prisma } from "./config/prisma.js";
 import { redis } from "./config/redis.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import authRoutes from "./routes/auth.routes.js"
+import cookieParser from "cookie-parser";
 
 const app = express();
 
 app.use(express.json());
+app.use(cookieParser());
 
 
 app.use("/api/auth", authRoutes);

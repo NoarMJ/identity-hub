@@ -14,3 +14,18 @@ export function createUser({ name, email, passwordHash }) {
     select: publicFields,
   });
 }
+
+// Includes passwordHash and status: for login checks only, never send it to clients
+export function findUserByEmail(email) {
+  return prisma.user.findUnique({
+    where: { email },
+    select: { ...publicFields, passwordHash: true, status: true },
+  });
+}
+
+export function findUserById(id) {
+  return prisma.user.findUnique({
+    where: { id },
+    select: { ...publicFields, status: true },
+  });
+}
