@@ -34,3 +34,36 @@ export function consumeVerificationToken(record) {
     return true;
   });
 }
+export function replaceResetToken(userId, tokenHash, expiresAt) {
+  return prisma.$transaction([
+    prisma.passwordResetToken.deleteMany({ where: { userId } }),
+    prisma.passwordResetToken.create({
+      data: { userId, tokenHash, expiresAt },
+    }),
+  ]);
+}
+
+export function findResetToken(tokenHash) {
+  return prisma.passwordResetToken.findUnique({ where: { tokenHash } });
+}
+
+// Uses the token up and saves the new password hash, all or nothing
+export function consumeResetToken(record, passwordHash) {
+  return prisma.$transaction(async (tx) => {
+    const deleted = await tx.passwordResetToken.deleteMany({
+      where: { id: record.id },
+    });
+
+    // Someone else used this token a moment ago
+    if (deleted.count === 0) return false;
+
+    await tx.user.update({
+      where: { id: record.userId },
+      data: { passwordHash },
+    });
+    await tx.passwordResetToken.deleteMany({
+      where: { userId: record.userId },
+    });
+    return true;
+  });
+}

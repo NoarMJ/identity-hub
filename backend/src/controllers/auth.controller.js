@@ -1,4 +1,4 @@
-import { registerSchema, loginSchema,verifyEmailSchema,resendVerificationSchema } from "../validators/auth.validators.js";
+import { registerSchema, loginSchema,verifyEmailSchema,resendVerificationSchema, forgotPasswordSchema, resetPasswordSchema } from "../validators/auth.validators.js";
 import { registerUser, loginUser } from "../services/auth.service.js";
 import { destroySession } from "../services/session.service.js";
 import { findUserById } from "../repositories/user.repository.js";
@@ -8,6 +8,7 @@ import {
   sessionCookieClearOptions,
 } from "../config/session.js";
 import { verifyEmail, resendVerification } from "../services/verification.service.js";
+import { requestPasswordReset,resetPassword } from "../services/password-reset.service.js";
 
 function validationError(res, error) {
   return res.status(400).json({
@@ -100,6 +101,34 @@ export async function resendVerificationHandler(req, res, next) {
     await resendVerification(result.data.email);
     return res.status(202).json({
       message: "If the account exists and is not verified, an email has been sent.",
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function forgotPasswordHandler(req, res, next) {
+  try {
+    const result = forgotPasswordSchema.safeParse(req.body);
+    if (!result.success) return validationError(res, result.error);
+
+    await requestPasswordReset(result.data.email);
+    return res.status(202).json({
+      message: "If an account exists for that email, a password reset link has been sent.",
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function resetPasswordHandler(req, res, next) {
+  try {
+    const result = resetPasswordSchema.safeParse(req.body);
+    if (!result.success) return validationError(res, result.error);
+
+    await resetPassword(result.data.token, result.data.password);
+    return res.status(200).json({
+      message: "Password updated. Please log in with your new password.",
     });
   } catch (error) {
     return next(error);
